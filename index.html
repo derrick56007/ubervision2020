@@ -1,0 +1,230 @@
+<!doctype html>
+<html>
+    <head>
+        <title>UberVision2020</title>
+
+        <style>
+
+	html, body {
+		margin: 0;
+			padding: 0;
+	height: 100%;	
+	}
+
+	body {
+	background: #191516;
+
+		align-items: center;
+			justify-content: center;
+	}
+
+	 svg {
+		margin: auto;
+			border: none;
+	 }
+
+	 .node {
+stroke: blue;
+	stroke-width: 3px;
+
+	 }
+ 
+	 .hot {
+stroke: #FD951F;
+	stroke-width: 3px;
+
+	 }
+                       
+        </style>
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.15.0/d3.min.js"></script>
+	
+	<script>
+            function loadJSON(callback) {   
+                var xobj = new XMLHttpRequest();
+                xobj.overrideMimeType("application/json");
+                xobj.open('GET', '/data/sf.geojson', true);
+                xobj.onreadystatechange = function () {
+                    if (xobj.readyState == 4 && xobj.status == "200") {
+                        callback(JSON.parse(xobj.responseText));
+                    }
+                };
+                xobj.send(null);  
+            }
+            loadJSON(function(geojson) {
+                console.log(geojson);
+
+		    var width = 800,
+			    height = 800;
+
+		                var svg = d3.select("body").append("svg")
+		                    .attr("width", width)
+		                    .attr("height", height)
+		                    .attr("class", "svg");
+
+                var projection = d3.geoMercator().scale(1).translate([0,0]);
+
+                var geoGenerator = d3.geoPath().projection(projection);
+		                var b = geoGenerator.bounds(geojson),
+			                        s = 1.65 / Math.max((b[1][0] - b[0][0]) / width, (b[1][1] - b[0][1]) / height),
+			                        t = [(width - s * (b[1][0] + b[0][0])) / 2, (height - s * (b[1][1] + b[0][1])) / 2];
+
+		                    // update the projection to use computed scale and translate....
+		
+			    t[0] = t[0] - 70;
+		            t[1] = t[1] + 200;
+			    console.log(t);
+
+		
+
+			    projection
+		                        .scale(s)
+		                        .translate(t);
+
+                svg.append("rect")
+		                        .attr('width', width)
+		                        .attr('height', height)
+		    //                    .style('stroke', 'black')
+		                        .style('fill', d3.rgb('#191516'));
+
+		                    // draw the svg of both the geojson and bounding box
+		                    var g = svg.selectAll("path").data(geojson.features).enter().append("path")
+		                        .attr("d", geoGenerator)
+		                        .style("fill", d3.rgb('#C9DAEA'))
+		                        .style("stroke-width", "1")
+		                        .style("stroke", "white");
+
+		    // g.attr('transform', 'scale(0.75)')
+
+		   var defs = svg.append("defs");
+		    
+		      var filter = defs.append("filter")
+		          .attr("id", "dropshadow")
+		    
+		      filter.append("feGaussianBlur")
+		          .attr("in", "SourceAlpha")
+		          .attr("stdDeviation", 1)
+		          .attr("result", "blur");
+		      filter.append("feOffset")
+		          .attr("in", "blur")
+		          .attr("dx", 2)
+		          .attr("dy", 2)
+		          .attr("result", "offsetBlur");
+		    
+		      var feMerge = filter.append("feMerge");
+		    
+		      feMerge.append("feMergeNode")
+		          .attr("in", "offsetBlur")
+		      feMerge.append("feMergeNode")
+		          .attr("in", "SourceGraphic");
+		    
+		    var nodes = [ 
+			    {
+				'name': 'The Palace of Fine Arts',
+			        'x' : 220, 
+				'y':  250,
+				    'color' : 'white'
+			    },
+		            {
+				    'name': "Fisherman's Wharf",
+				    'x' : 480,
+				    'y': 210,
+				    'color' : 'white'
+		            },
+		            {
+		                   
+				   'name' : "Oracle Park",
+				    "x" : 720,
+				    "y" : 510,
+				    'color' : 'white'
+			    }]
+
+
+		    var node = svg.selectAll(".node")
+		    .data(nodes)
+		    .enter().append("svg:circle")
+			    .attr("cx", function (d) { return d.x; })
+                   	    .attr("cy", function (d) { return d.y; })
+		            .attr("fill", function (d) { return d.color; })
+
+
+		    .attr("class", "node")
+		    .attr("r", 15)
+		    .attr('filter', 'url(#dropshadow)');
+
+		    var labels= svg.selectAll('.label')
+			    .data(nodes).enter()
+			    .append("text")
+			    .attr("x", function (d) { return d.x - 110; })
+                   	    .attr("y", function (d) { return d.y - 25; })
+		    	    .attr("fill", "white")
+		            .attr("stroke", "black")
+		            .attr("paint-order", "stroke")
+		            .attr("font-size", "1.5em")
+		            .attr("stroke-width", "3")
+		            .attr("font-family", "verdana")
+		            .text(function (d) { return d.name; });
+
+
+		    var hots = [ 
+			    {
+				'name': 'Embarcadero',
+			        'x' : 660, 
+				'y':  360,
+				    'color' : 'white',
+				    'dx' : -150
+				   
+			    },
+		            {
+				    'name': "2nd Street and Stevenson Street",
+				    'x' : 630,
+				    'y': 400,
+				    'color' : 'white',
+				    'dx' : -400
+		            },
+		            {
+		                   
+				   'name' : "Powell",
+				    "x" : 570,
+				    "y" : 450,
+				    'color' : 'white',
+				    'dx': -70
+			    }];
+
+
+
+		    var node1 = svg.selectAll(".hot")
+		    .data(hots)
+		    .enter().append("svg:circle")
+			    .attr("cx", function (d) { return d.x; })
+                   	    .attr("cy", function (d) { return d.y; })
+		            .attr("fill", function (d) { return d.color; })
+
+		    .attr("class", "hot")
+		    .attr("r", 15)
+		    .attr('filter', 'url(#dropshadow)');
+
+
+
+		    var labels2 = svg.selectAll('.label')
+			    .data(hots).enter()
+			    .append("text")
+			    .attr("x", function (d) { return d.x + d.dx; })
+                   	    .attr("y", function (d) { return d.y - 25; })
+		    	    .attr("fill", "white")
+		            .attr("stroke", "black")
+		            .attr("paint-order", "stroke")
+		            .attr("font-size", "1.5em")
+		            .attr("stroke-width", "3")
+		            .attr("font-family", "verdana")
+		            .text(function (d) { return d.name; });
+
+
+
+
+            });
+	</script>
+    </head>
+    <body style="display: flex;">
+    </body>
+</html>
